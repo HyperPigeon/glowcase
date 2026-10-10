@@ -1,6 +1,8 @@
 package dev.hephaestus.glowcase.block.entity;
 
+import com.mojang.serialization.Codec;
 import dev.hephaestus.glowcase.Glowcase;
+import dev.hephaestus.glowcase.util.PartPoseInfo;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
@@ -19,6 +21,10 @@ import org.joml.Vector3f;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 @NullMarked
 public class EntityDisplayBlockEntity extends DisplayBlockEntity implements StackInteractable {
 	public static final TagKey<EntityType<?>> TICK = TagKey.create(Registries.ENTITY_TYPE, Glowcase.id("tick_in_display"));
@@ -26,6 +32,7 @@ public class EntityDisplayBlockEntity extends DisplayBlockEntity implements Stac
 	protected int entityId;
 	protected @Nullable Entity displayEntity = null;
 	protected @Nullable EntityType<?> entityType = null;
+	protected Map<String, PartPoseInfo> partPoses = new HashMap<>();
 
 	public EntityDisplayBlockEntity(BlockPos pos, BlockState state) {
 		super(Glowcase.ENTITY_DISPLAY_BLOCK_ENTITY.get(), pos, state);
@@ -82,11 +89,34 @@ public class EntityDisplayBlockEntity extends DisplayBlockEntity implements Stac
 		}
 	}
 
+	public Map<String,PartPoseInfo> getPartPoses(){
+		return partPoses;
+	}
+
+	public void loadPartPoses(Map<String, PartPoseInfo> newPartPoses) {
+		this.partPoses.putAll(newPartPoses);
+	}
+
+	public PartPoseInfo getPartPostInfo(String name) {
+		if(partPoses.containsKey(name)) {
+			return partPoses.get(name);
+		}
+		return new PartPoseInfo(name,new Vector3f(0), new Vector3f(0));
+	}
+
+	public void setPartPoseInfo(String name, PartPoseInfo partPoseInfo) {
+		this.partPoses.put(name,partPoseInfo);
+	}
+
+
 	@Override
 	protected void saveAdditional(ValueOutput view) {
 		super.saveAdditional(view);
 		if (entityType != null) {
 			view.store("type", EntityType.CODEC, entityType);
+		}
+		if(!partPoses.isEmpty()) {
+			view.store("partPoses", Codec.unboundedMap(Codec.STRING, PartPoseInfo.CODEC), partPoses);
 		}
 	}
 
@@ -97,6 +127,10 @@ public class EntityDisplayBlockEntity extends DisplayBlockEntity implements Stac
 		this.entityId = view.getIntOr("entityId", 0);
 		this.entityType = view.read("type", EntityType.CODEC).orElse(null);
 		this.displayEntity = null;
+
+		this.partPoses.clear();
+		Optional<Map<String, PartPoseInfo>> optionalStringPartPoseInfoMap = view.read("partPoses", Codec.unboundedMap(Codec.STRING, PartPoseInfo.CODEC));
+		optionalStringPartPoseInfoMap.ifPresent(stringPartPoseInfoMap -> this.partPoses.putAll(stringPartPoseInfoMap));
 	}
 
 	@Override

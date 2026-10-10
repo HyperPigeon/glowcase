@@ -1,16 +1,166 @@
 package dev.hephaestus.glowcase.client.gui.screen.ingame;
 
+import com.google.common.primitives.Floats;
 import dev.hephaestus.glowcase.block.entity.DisplayBlockEntity;
+import dev.hephaestus.glowcase.block.entity.EntityDisplayBlockEntity;
+import dev.hephaestus.glowcase.client.util.ModelPartUtil;
 import dev.hephaestus.glowcase.packet.C2SEditEntityDisplayBlock;
+import dev.hephaestus.glowcase.util.PartPoseInfo;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.EntityType;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class EntityDisplayEditScreen extends DisplayBlockEditScreen {
+
+	private final EntityDisplayBlockEntity entityDisplay;
+	private final Set<String> expandedParts = new HashSet<>();
+	private boolean expanded = false;
+	private int STARTING_X = 10;
+	private int STARTING_Y = 200;
+	private int scrollOffset = 0;
+	private int maxScroll = 0;
+
+
 	public EntityDisplayEditScreen(DisplayBlockEntity displayBlock) {
 		super(displayBlock);
+		this.entityDisplay = (EntityDisplayBlockEntity) displayBlock;
+	}
+
+	@Override
+	public void init() {
+		super.init();
+
+		this.addRenderableWidget(Button.builder(
+			Component.literal(this.expanded ? "▼ " : "▶ ").append(Component.translatable("gui.glowcase.model_parts")),
+			_ -> {
+				this.expanded = !this.expanded;
+				this.rebuildWidgets();
+			}
+		).bounds(STARTING_X, STARTING_Y, 200, 20).build());
+
+		int bottom = STARTING_Y + 22;
+		if(this.entityDisplay.getDisplayEntity() != null) {
+			EntityType<?> type = this.entityDisplay.getDisplayEntity().getType();
+			ModelPart root = ModelPartUtil.getModelRoot(type);
+			if (this.expanded && root != null) {
+				bottom = this.addPartRows(root);
+			}
+		}
+
+		this.maxScroll = Math.max(0, bottom + 10 - this.height);
+		this.scrollOffset = Mth.clamp(this.scrollOffset, 0, this.maxScroll);
+		this.offsetWidgets(-this.scrollOffset);
+
+
+	}
+
+	private int addPartRows(ModelPart parent) {
+		int y = STARTING_Y + 22;
+		for (Map.Entry<String, ModelPart> entry : parent.children.entrySet()) {
+			String name = entry.getKey();
+			boolean partExpanded = this.expandedParts.contains(name);
+			String displayName = name.replace("_", " ");
+			displayName = displayName.substring(0, 1).toUpperCase() + displayName.substring(1);
+
+			this.addRenderableWidget(Button.builder(Component.literal((partExpanded ? "▼ " : "▶ ") + displayName), _ -> {
+				if (!this.expandedParts.remove(name)) this.expandedParts.add(name);
+				this.rebuildWidgets();
+			}).bounds(STARTING_X + 10, y, 190, 20).build());
+
+			y += 22;
+			if (!partExpanded) continue;
+
+			for (int i = 0; i <= 1; i++) {
+				boolean isRotation = i == 0;
+				Component label = Component.translatable(isRotation ? "gui.glowcase.rotation" : "gui.glowcase.offset");
+				this.addRenderableWidget(new StringWidget(STARTING_X + 20, y + 5, this.font.width(label), 9, label, this.font));
+
+				float step = isRotation ? 5F : 0.25F;
+				for (int axis = 0; axis < 3; axis++) {
+					int column = STARTING_X + 70 + axis * 84;
+					int a = axis;
+					PartPoseInfo partPoseInfo = this.entityDisplay.getPartPostInfo(name);
+
+					EditBox field = new EditBox(this.font, column, y, 44, 18, Component.empty());
+					field.setValue(String.valueOf((isRotation ? partPoseInfo.rotation() : partPoseInfo.offset()).get(a)));
+					field.setResponder(string -> {
+						if (Floats.tryParse(string) instanceof Float parsed) {
+							if(isRotation) {
+								entityDisplay.setPartPoseInfo(name, entityDisplay.getPartPostInfo(name).updateRotationAtAxis(a,parsed));
+							}
+							else {
+								entityDisplay.setPartPoseInfo(name, entityDisplay.getPartPostInfo(name).updateOffsetAtAxis(a,parsed));
+							}
+							editDisplayBlock();
+						}
+					});
+
+					this.addRenderableWidget(field);
+					this.addRenderableWidget(Button.builder(Component.literal("-"), _ -> {
+						PartPoseInfo newValue = this.entityDisplay.getPartPostInfo(name);
+						if(isRotation) {
+							newValue = newValue.updateRotationAtAxis(a,newValue.getRotationAtAxis(a)-step);
+							this.entityDisplay.setPartPoseInfo(name,newValue);
+						}
+						else {
+							newValue = newValue.updateOffsetAtAxis(a,newValue.getOffsetAtAxis(a)-step);
+							this.entityDisplay.setPartPoseInfo(name,newValue);
+						}
+						editDisplayBlock();
+						field.setValue(String.valueOf((isRotation ? newValue.getRotationAtAxis(a) : newValue.getOffsetAtAxis(a))));
+					}).bounds(column + 46, y, 18, 18).build());
+					this.addRenderableWidget(Button.builder(Component.literal("+"), _ -> {
+						PartPoseInfo newValue = this.entityDisplay.getPartPostInfo(name);
+						if(isRotation) {
+							newValue = newValue.updateRotationAtAxis(a,newValue.getRotationAtAxis(a)+step);
+							this.entityDisplay.setPartPoseInfo(name,newValue);
+						}
+						else {
+							newValue = newValue.updateOffsetAtAxis(a,newValue.getOffsetAtAxis(a)+step);
+							this.entityDisplay.setPartPoseInfo(name,newValue);
+						}
+						editDisplayBlock();
+						field.setValue(String.valueOf((isRotation ? newValue.getRotationAtAxis(a) : newValue.getOffsetAtAxis(a))));
+					}).bounds(column + 64, y, 18, 18).build());
+				}
+				y += 22;
+			}
+		}
+		return y;
+
+	}
+
+	@Override
+	public boolean mouseScrolled(double x, double y, double scrollX, double scrollY) {
+		int newOffset = Mth.clamp(this.scrollOffset - (int) (scrollY * 20), 0, this.maxScroll);
+		if (newOffset != this.scrollOffset) {
+			this.offsetWidgets(this.scrollOffset - newOffset);
+			this.scrollOffset = newOffset;
+			return true;
+		}
+		return super.mouseScrolled(x, y, scrollX, scrollY);
+	}
+
+	private void offsetWidgets(int scrollOffset) {
+		for (GuiEventListener child : this.children()) {
+			if (child instanceof AbstractWidget widget) widget.setY(widget.getY() + scrollOffset);
+		}
 	}
 
 	@Override
 	public CustomPacketPayload getUpdatePayload() {
 		return C2SEditEntityDisplayBlock.of(blockEntity);
 	}
+
 }
