@@ -20,15 +20,12 @@
 	"mixins": [
 		"${modId}.mixins.json"
 	],
-	"accessWidener": "glowcase.classtweaker",
+	"accessWidener": "${modId}.classtweaker",
 	"depends": {
 		"minecraft": ">=${mc}",
 		"fabricloader": ">=${fl}",
 		"fabric-api": ">=${fapi}",
 		"placeholder-api": ">=${placeholder}"
-	},
-	"suggests": {
-		"polydex": "*"
 	},
 	"entrypoints": {
 		"fabric-datagen": [
