@@ -20,12 +20,10 @@ import java.util.Map;
 public class ModelPartUtil {
 
 	@Nullable
-	public static ModelPart getModelRoot(EntityType<?> type) {
+	public static ModelPart getModelRoot(Entity entity) {
 		Minecraft minecraft = Minecraft.getInstance();
 		ClientLevel level = minecraft.level;
 		if (level == null) return null;
-
-		Entity entity = type.create(level, EntitySpawnReason.EVENT);
 		if (entity == null) return null;
 
 		EntityRenderer<?, ?> renderer = minecraft.getEntityRenderDispatcher().getRenderer(entity);
@@ -40,25 +38,35 @@ public class ModelPartUtil {
 			return;
 		}
 		Map<String, PartPoseInfo> partPoses = posed.glowcase$getPartPoses();
-		if (partPoses == null) {
+		if (partPoses == null || partPoses.isEmpty()) {
 			return;
 		}
 
-		Map<String, ModelPart> children = model.root().children;
-		for (PartPoseInfo partPoseInfo : partPoses.values()) {
-			ModelPart part = children.get(partPoseInfo.name());
-			if (part == null) {
+		walk(model.root(), partPoses);
+	}
+
+	private static void walk(ModelPart parent, Map<String, PartPoseInfo> partPoses) {
+		Map<String, ModelPart> children = parent.children;
+		for (Map.Entry<String, ModelPart> entry : children.entrySet()) {
+			ModelPart part = entry.getValue();
+			String name = entry.getKey();
+			if (part == null || name == null) {
 				continue;
 			}
+			if(partPoses.containsKey(name)) {
+				PartPoseInfo partPoseInfo = partPoses.get(name);
 
-			Vector3fc offset = partPoseInfo.offset();
-			Vector3fc rotation = partPoseInfo.rotation();
-			part.x += offset.x();
-			part.y += offset.y();
-			part.z += offset.z();
-			part.xRot += rotation.x() * Mth.DEG_TO_RAD;
-			part.yRot += rotation.y() * Mth.DEG_TO_RAD;
-			part.zRot += rotation.z() * Mth.DEG_TO_RAD;
+				Vector3fc offset = partPoseInfo.offset();
+				Vector3fc rotation = partPoseInfo.rotation();
+
+				part.x += offset.x();
+				part.y += offset.y();
+				part.z += offset.z();
+				part.xRot += rotation.x() * Mth.DEG_TO_RAD;
+				part.yRot += rotation.y() * Mth.DEG_TO_RAD;
+				part.zRot += rotation.z() * Mth.DEG_TO_RAD;
+			}
+			walk(part, partPoses);
 		}
 	}
 }

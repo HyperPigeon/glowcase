@@ -15,7 +15,7 @@ import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Entity;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -41,20 +41,20 @@ public class EntityDisplayEditScreen extends DisplayBlockEditScreen {
 	public void init() {
 		super.init();
 
-		this.addRenderableWidget(Button.builder(
-			Component.literal(this.expanded ? "▼ " : "▶ ").append(Component.translatable("gui.glowcase.model_parts")),
-			_ -> {
-				this.expanded = !this.expanded;
-				this.rebuildWidgets();
-			}
-		).bounds(STARTING_X, STARTING_Y, 200, 20).build());
-
 		int bottom = STARTING_Y + 22;
-		if(this.entityDisplay.getDisplayEntity() != null) {
-			EntityType<?> type = this.entityDisplay.getDisplayEntity().getType();
-			ModelPart root = ModelPartUtil.getModelRoot(type);
+		Entity displayEntity = this.entityDisplay.getDisplayEntity();
+		if(displayEntity != null) {
+			this.addRenderableWidget(Button.builder(
+				Component.literal(this.expanded ? "▼ " : "▶ ").append(Component.translatable("gui.glowcase.model_parts")),
+				_ -> {
+					this.expanded = !this.expanded;
+					this.rebuildWidgets();
+				}
+			).bounds(STARTING_X, STARTING_Y, 200, 20).build());
+
+			ModelPart root = ModelPartUtil.getModelRoot(displayEntity);
 			if (this.expanded && root != null) {
-				bottom = this.addPartRows(root);
+				bottom = this.addPartRows(root, bottom, 0);
 			}
 		}
 
@@ -65,8 +65,8 @@ public class EntityDisplayEditScreen extends DisplayBlockEditScreen {
 
 	}
 
-	private int addPartRows(ModelPart parent) {
-		int y = STARTING_Y + 22;
+	private int addPartRows(ModelPart parent, int y, int depth) {
+		int indent = Math.min(depth, 6) * 10;
 		for (Map.Entry<String, ModelPart> entry : parent.children.entrySet()) {
 			String name = entry.getKey();
 			boolean partExpanded = this.expandedParts.contains(name);
@@ -76,7 +76,7 @@ public class EntityDisplayEditScreen extends DisplayBlockEditScreen {
 			this.addRenderableWidget(Button.builder(Component.literal((partExpanded ? "▼ " : "▶ ") + displayName), _ -> {
 				if (!this.expandedParts.remove(name)) this.expandedParts.add(name);
 				this.rebuildWidgets();
-			}).bounds(STARTING_X + 10, y, 190, 20).build());
+			}).bounds(STARTING_X + 10 + indent, y, 190 - indent, 20).build());
 
 			y += 22;
 			if (!partExpanded) continue;
@@ -136,6 +136,7 @@ public class EntityDisplayEditScreen extends DisplayBlockEditScreen {
 				}
 				y += 22;
 			}
+			y = this.addPartRows(entry.getValue(), y, depth + 1);
 		}
 		return y;
 

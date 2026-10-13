@@ -60,6 +60,7 @@ public class EntityDisplayBlockEntity extends DisplayBlockEntity implements Stac
 
 	@Override
 	public void unsetFromStack() {
+		clearPartPoses();
 		setDisplayEntity(null);
 	}
 
@@ -95,6 +96,10 @@ public class EntityDisplayBlockEntity extends DisplayBlockEntity implements Stac
 
 	public void loadPartPoses(Map<String, PartPoseInfo> newPartPoses) {
 		this.partPoses.putAll(newPartPoses);
+	}
+
+	public void clearPartPoses(){
+		this.partPoses.clear();
 	}
 
 	public PartPoseInfo getPartPostInfo(String name) {
