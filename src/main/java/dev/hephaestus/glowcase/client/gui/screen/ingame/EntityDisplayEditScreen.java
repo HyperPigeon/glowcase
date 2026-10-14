@@ -87,7 +87,11 @@ public class EntityDisplayEditScreen extends DisplayBlockEditScreen {
 				this.addRenderableWidget(new StringWidget(STARTING_X + 20, y + 5, this.font.width(label), 9, label, this.font));
 
 				PartPoseInfo partPoseInfo = this.entityDisplay.getPartPostInfo(name);
-				this.addRenderableWidget(Vec3FieldsWidget.builder(this.font, new Vec3(isRotation ? partPoseInfo.rotation() : partPoseInfo.offset())).setPos(STARTING_X + 70, y).setWidth(246).setHeight(18).setRotation(isRotation).setOnValueChange(vec3 -> {
+				this.addRenderableWidget(Vec3FieldsWidget.builder(this.font, new Vec3(isRotation ? partPoseInfo.rotation() : partPoseInfo.offset()))
+					.setPos(STARTING_X + 70, y).
+					setWidth(246).setHeight(18)
+					.setRotation(isRotation)
+					.setOnValueChange(vec3 -> {
 					PartPoseInfo current = this.entityDisplay.getPartPostInfo(name);
 					this.entityDisplay.setPartPoseInfo(name, isRotation ? current.updateRotation(vec3.toVector3f()) : current.updateOffset(vec3.toVector3f()));
 					editDisplayBlock();
