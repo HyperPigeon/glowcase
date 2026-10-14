@@ -1,14 +1,13 @@
 package dev.hephaestus.glowcase.client.gui.screen.ingame;
 
-import com.google.common.primitives.Floats;
 import dev.hephaestus.glowcase.block.entity.DisplayBlockEntity;
 import dev.hephaestus.glowcase.block.entity.EntityDisplayBlockEntity;
+import dev.hephaestus.glowcase.client.gui.widget.ingame.number.Vec3FieldsWidget;
 import dev.hephaestus.glowcase.client.util.ModelPartUtil;
 import dev.hephaestus.glowcase.packet.C2SEditEntityDisplayBlock;
 import dev.hephaestus.glowcase.util.PartPoseInfo;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.model.geom.ModelPart;
@@ -16,6 +15,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -86,54 +86,12 @@ public class EntityDisplayEditScreen extends DisplayBlockEditScreen {
 				Component label = Component.translatable(isRotation ? "gui.glowcase.rotation" : "gui.glowcase.offset");
 				this.addRenderableWidget(new StringWidget(STARTING_X + 20, y + 5, this.font.width(label), 9, label, this.font));
 
-				float step = isRotation ? 5F : 0.25F;
-				for (int axis = 0; axis < 3; axis++) {
-					int column = STARTING_X + 70 + axis * 84;
-					int a = axis;
-					PartPoseInfo partPoseInfo = this.entityDisplay.getPartPostInfo(name);
-
-					EditBox field = new EditBox(this.font, column, y, 44, 18, Component.empty());
-					field.setValue(String.valueOf((isRotation ? partPoseInfo.rotation() : partPoseInfo.offset()).get(a)));
-					field.setResponder(string -> {
-						if (Floats.tryParse(string) instanceof Float parsed) {
-							if(isRotation) {
-								entityDisplay.setPartPoseInfo(name, entityDisplay.getPartPostInfo(name).updateRotationAtAxis(a,parsed));
-							}
-							else {
-								entityDisplay.setPartPoseInfo(name, entityDisplay.getPartPostInfo(name).updateOffsetAtAxis(a,parsed));
-							}
-							editDisplayBlock();
-						}
-					});
-
-					this.addRenderableWidget(field);
-					this.addRenderableWidget(Button.builder(Component.literal("-"), _ -> {
-						PartPoseInfo newValue = this.entityDisplay.getPartPostInfo(name);
-						if(isRotation) {
-							newValue = newValue.updateRotationAtAxis(a,newValue.getRotationAtAxis(a)-step);
-							this.entityDisplay.setPartPoseInfo(name,newValue);
-						}
-						else {
-							newValue = newValue.updateOffsetAtAxis(a,newValue.getOffsetAtAxis(a)-step);
-							this.entityDisplay.setPartPoseInfo(name,newValue);
-						}
-						editDisplayBlock();
-						field.setValue(String.valueOf((isRotation ? newValue.getRotationAtAxis(a) : newValue.getOffsetAtAxis(a))));
-					}).bounds(column + 46, y, 18, 18).build());
-					this.addRenderableWidget(Button.builder(Component.literal("+"), _ -> {
-						PartPoseInfo newValue = this.entityDisplay.getPartPostInfo(name);
-						if(isRotation) {
-							newValue = newValue.updateRotationAtAxis(a,newValue.getRotationAtAxis(a)+step);
-							this.entityDisplay.setPartPoseInfo(name,newValue);
-						}
-						else {
-							newValue = newValue.updateOffsetAtAxis(a,newValue.getOffsetAtAxis(a)+step);
-							this.entityDisplay.setPartPoseInfo(name,newValue);
-						}
-						editDisplayBlock();
-						field.setValue(String.valueOf((isRotation ? newValue.getRotationAtAxis(a) : newValue.getOffsetAtAxis(a))));
-					}).bounds(column + 64, y, 18, 18).build());
-				}
+				PartPoseInfo partPoseInfo = this.entityDisplay.getPartPostInfo(name);
+				this.addRenderableWidget(Vec3FieldsWidget.builder(this.font, new Vec3(isRotation ? partPoseInfo.rotation() : partPoseInfo.offset())).setPos(STARTING_X + 70, y).setWidth(246).setHeight(18).setRotation(isRotation).setOnValueChange(vec3 -> {
+					PartPoseInfo current = this.entityDisplay.getPartPostInfo(name);
+					this.entityDisplay.setPartPoseInfo(name, isRotation ? current.updateRotation(vec3.toVector3f()) : current.updateOffset(vec3.toVector3f()));
+					editDisplayBlock();
+				}).build());
 				y += 22;
 			}
 			y = this.addPartRows(entry.getValue(), y, depth + 1);
