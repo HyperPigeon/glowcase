@@ -40,7 +40,7 @@ public record PartPoseInfo(String name, Vector3fc offset, Vector3fc rotation) {
 		};
 	}
 
-	public PartPoseInfo updateRotationAtAxis(Direction.Axis axis, float newRotation) {
+	public PartPoseInfo withRotationAtAxis(Direction.Axis axis, float newRotation) {
 		final Vector3f newRotationVec = switch (axis) {
 			case X -> new Vector3f(newRotation, rotation.y(), rotation.z());
 			case Y -> new Vector3f(rotation.x(), newRotation, rotation.z());
@@ -49,7 +49,7 @@ public record PartPoseInfo(String name, Vector3fc offset, Vector3fc rotation) {
 		return new PartPoseInfo(name(), offset(), newRotationVec);
 	}
 
-	public PartPoseInfo updateOffsetAtAxis(Direction.Axis axis, float newOffset) {
+	public PartPoseInfo withOffsetAtAxis(Direction.Axis axis, float newOffset) {
 		Vector3f newOffsetVec = switch (axis) {
 			case X -> new Vector3f(newOffset, offset().y(), offset().z());
 			case Y -> new Vector3f(offset().x(), newOffset, offset().z());
@@ -58,11 +58,11 @@ public record PartPoseInfo(String name, Vector3fc offset, Vector3fc rotation) {
 		return new PartPoseInfo(name(), newOffsetVec, rotation());
 	}
 
-	public PartPoseInfo updateRotation(Vector3f newRotation) {
+	public PartPoseInfo withRotation(Vector3f newRotation) {
 		return new PartPoseInfo(name(), offset(), newRotation);
 	}
 
-	public PartPoseInfo updateOffset(Vector3f newOffset) {
+	public PartPoseInfo withOffset(Vector3f newOffset) {
 		return new PartPoseInfo(name(), newOffset, rotation());
 	}
 

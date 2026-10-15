@@ -26,8 +26,8 @@ public class EntityDisplayEditScreen extends DisplayBlockEditScreen {
 	private final EntityDisplayBlockEntity entityDisplay;
 	private final Set<String> expandedParts = new HashSet<>();
 	private boolean expanded = false;
-	private int STARTING_X = 10;
-	private int STARTING_Y = 200;
+	private final int STARTING_X = 10;
+	private final int STARTING_Y = 200;
 	private int scrollOffset = 0;
 	private int maxScroll = 0;
 
@@ -94,7 +94,10 @@ public class EntityDisplayEditScreen extends DisplayBlockEditScreen {
 					.setRotation(isRotation)
 					.setOnValueChange(vec3 -> {
 					PartPoseInfo current = this.entityDisplay.getPartPostInfo(partPath);
-					this.entityDisplay.setPartPoseInfo(partPath, isRotation ? current.updateRotation(vec3.toVector3f()) : current.updateOffset(vec3.toVector3f()));
+						this.entityDisplay.setPartPoseInfo(
+							partPath,
+							isRotation ? current.withRotation(vec3.toVector3f()) : current.withOffset(vec3.toVector3f())
+						);
 					editDisplayBlock();
 				}).build());
 				y += 22;
