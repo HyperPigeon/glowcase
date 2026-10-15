@@ -42,19 +42,20 @@ public class ModelPartUtil {
 			return;
 		}
 
-		walk(model.root(), partPoses);
+		walk("root", model.root(), partPoses);
 	}
 
-	private static void walk(ModelPart parent, Map<String, PartPoseInfo> partPoses) {
+	private static void walk(String path, ModelPart parent, Map<String, PartPoseInfo> partPoses) {
 		Map<String, ModelPart> children = parent.children;
 		for (Map.Entry<String, ModelPart> entry : children.entrySet()) {
 			ModelPart part = entry.getValue();
 			String name = entry.getKey();
+			String partPath = path + "." + name;
 			if (part == null || name == null) {
 				continue;
 			}
-			if(partPoses.containsKey(name)) {
-				PartPoseInfo partPoseInfo = partPoses.get(name);
+			if(partPoses.containsKey(partPath)) {
+				PartPoseInfo partPoseInfo = partPoses.get(partPath);
 
 				Vector3fc offset = partPoseInfo.offset();
 				Vector3fc rotation = partPoseInfo.rotation();
@@ -66,7 +67,15 @@ public class ModelPartUtil {
 				part.yRot += rotation.y() * Mth.DEG_TO_RAD;
 				part.zRot += rotation.z() * Mth.DEG_TO_RAD;
 			}
-			walk(part, partPoses);
+			walk(partPath,part, partPoses);
 		}
+	}
+
+	private static String getPartName(String partPath){
+		String[] parts = partPath.split("\\.");
+		if (parts.length > 0){
+			return parts[parts.length-1];
+		}
+		return "";
 	}
 }
