@@ -6,14 +6,11 @@ import dev.hephaestus.glowcase.client.gui.widget.ingame.number.Vec3FieldsWidget;
 import dev.hephaestus.glowcase.client.util.ModelPartUtil;
 import dev.hephaestus.glowcase.packet.C2SEditEntityDisplayBlock;
 import dev.hephaestus.glowcase.util.PartPoseInfo;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.StringWidget;
-import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
@@ -28,9 +25,6 @@ public class EntityDisplayEditScreen extends DisplayBlockEditScreen {
 	private boolean expanded = false;
 	private final int STARTING_X = 10;
 	private final int STARTING_Y = 200;
-	private int scrollOffset = 0;
-	private int maxScroll = 0;
-
 
 	public EntityDisplayEditScreen(DisplayBlockEntity displayBlock) {
 		super(displayBlock);
@@ -58,11 +52,7 @@ public class EntityDisplayEditScreen extends DisplayBlockEditScreen {
 			}
 		}
 
-		this.maxScroll = Math.max(0, bottom + 10 - this.height);
-		this.scrollOffset = Mth.clamp(this.scrollOffset, 0, this.maxScroll);
-		this.offsetWidgets(-this.scrollOffset);
-
-
+		this.setMaxScroll(0, bottom + 10 - this.height, false);
 	}
 
 	private int addPartRows(String path, ModelPart parent, int y, int depth) {
@@ -106,23 +96,6 @@ public class EntityDisplayEditScreen extends DisplayBlockEditScreen {
 		}
 		return y;
 
-	}
-
-	@Override
-	public boolean mouseScrolled(double x, double y, double scrollX, double scrollY) {
-		int newOffset = Mth.clamp(this.scrollOffset - (int) (scrollY * 20), 0, this.maxScroll);
-		if (newOffset != this.scrollOffset) {
-			this.offsetWidgets(this.scrollOffset - newOffset);
-			this.scrollOffset = newOffset;
-			return true;
-		}
-		return super.mouseScrolled(x, y, scrollX, scrollY);
-	}
-
-	private void offsetWidgets(int scrollOffset) {
-		for (GuiEventListener child : this.children()) {
-			if (child instanceof AbstractWidget widget) widget.setY(widget.getY() + scrollOffset);
-		}
 	}
 
 	@Override
