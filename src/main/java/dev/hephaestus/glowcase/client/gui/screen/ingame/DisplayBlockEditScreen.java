@@ -197,12 +197,12 @@ public abstract class DisplayBlockEditScreen extends BlockEditorScreen<DisplayBl
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
 		super.extractRenderState(graphics, mouseX, mouseY, delta);
-		graphics.text(minecraft.font, Component.translatable("gui.glowcase.scale_label"), 20, 17, 0xFFFFFFFF);
-		graphics.text(minecraft.font, Component.translatable("gui.glowcase.x_offset_label"), 20, 47, 0xFFFFFFFF);
-		graphics.text(minecraft.font, Component.translatable("gui.glowcase.y_offset_label"), 20, 77, 0xFFFFFFFF);
-		graphics.text(minecraft.font, Component.translatable("gui.glowcase.z_offset_label"), 20, 107, 0xFFFFFFFF);
-		graphics.text(minecraft.font, Component.translatable("gui.glowcase.pitch_value"), 20, 137, 0xFFFFFFFF);
-		graphics.text(minecraft.font, Component.translatable("gui.glowcase.yaw_value"), 20, 167, 0xFFFFFFFF);
+		graphics.text(minecraft.font, Component.translatable("gui.glowcase.scale_label"), 20, this.scaleField.getY() + 7, 0xFFFFFFFF);
+		graphics.text(minecraft.font, Component.translatable("gui.glowcase.x_offset_label"), 20, this.xOffsetField.getY() + 7, 0xFFFFFFFF);
+		graphics.text(minecraft.font, Component.translatable("gui.glowcase.y_offset_label"), 20, this.yOffsetField.getY() + 7, 0xFFFFFFFF);
+		graphics.text(minecraft.font, Component.translatable("gui.glowcase.z_offset_label"), 20, this.zOffsetField.getY() + 7, 0xFFFFFFFF);
+		graphics.text(minecraft.font, Component.translatable("gui.glowcase.pitch_value"), 20, this.pitchField.getY() + 7, 0xFFFFFFFF);
+		graphics.text(minecraft.font, Component.translatable("gui.glowcase.yaw_value"), 20, this.yawField.getY() + 7, 0xFFFFFFFF);
 	}
 
 	protected final void editDisplayBlock() {

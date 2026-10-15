@@ -5,6 +5,8 @@ import com.mojang.math.Axis;
 import dev.hephaestus.glowcase.Glowcase;
 import dev.hephaestus.glowcase.block.entity.EntityDisplayBlockEntity;
 import dev.hephaestus.glowcase.client.util.BlockEntityRenderUtil;
+import dev.hephaestus.glowcase.mixinsupport.PartPosedRenderState;
+import dev.hephaestus.glowcase.util.PartPoseInfo;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
@@ -19,6 +21,8 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Map;
+
 public record EntityDisplayBlockEntityRenderer(BlockEntityRendererProvider.Context context) implements BlockEntityRenderer<EntityDisplayBlockEntity, EntityDisplayBlockEntityRenderer.EntityDisplayRenderState> {
 	public static Identifier ITEM_TEXTURE = Glowcase.id("textures/item/entity_display_block.png");
 
@@ -30,6 +34,8 @@ public record EntityDisplayBlockEntityRenderer(BlockEntityRendererProvider.Conte
 		public Vector3f scale;
 
 		public Entity entity;
+
+		public Map<String, PartPoseInfo> partPoseInfoMap;
 	}
 
 	@Override
@@ -47,6 +53,7 @@ public record EntityDisplayBlockEntityRenderer(BlockEntityRendererProvider.Conte
 		// TODO: hmm, yes, shuttle the *entire entity* to the render state
 		// Perhaps shuttle the entity renderer & its state instead?
 		state.entity = blockEntity.getDisplayEntity();
+		state.partPoseInfoMap = blockEntity.getPartPoses();
 	}
 
 	@Override
@@ -62,6 +69,7 @@ public record EntityDisplayBlockEntityRenderer(BlockEntityRendererProvider.Conte
 			//noinspection unchecked
 			EntityRenderer<Entity, EntityRenderState> entityRenderer = (EntityRenderer<Entity, EntityRenderState>) context.entityRenderer().getRenderer(renderEntity);
 			EntityRenderState entityRenderState = entityRenderer.createRenderState(renderEntity, 0);
+			((PartPosedRenderState) entityRenderState).glowcase$setPartPoses(state.partPoseInfoMap.isEmpty() ? null : state.partPoseInfoMap);
 			entityRenderer.submit(entityRenderState, poseStack, submitNodeCollector, camera);
 		}
 
