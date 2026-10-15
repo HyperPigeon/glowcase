@@ -3,6 +3,7 @@ package dev.hephaestus.glowcase.util;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.core.Direction;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.ExtraCodecs;
@@ -23,60 +24,38 @@ public record PartPoseInfo(String name, Vector3fc offset, Vector3fc rotation) {
 		PartPoseInfo::new
 	);
 
-	public float getRotationAtAxis(int axis){
-		if(axis == 0) {
-			return rotation().x();
-		}
-		else if (axis == 1) {
-			return rotation().y();
-		}
-		else {
-			return rotation().z();
-		}
+	public float getRotationAtAxis(Direction.Axis axis) {
+		return switch (axis) {
+			case X -> rotation().x();
+			case Y -> rotation().y();
+			case Z -> rotation().z();
+		};
 	}
 
-	public float getOffsetAtAxis(int axis){
-		if(axis == 0) {
-			return offset().x();
-		}
-		else if (axis == 1) {
-			return offset().y();
-		}
-		else {
-			return offset().z();
-		}
+	public float getOffsetAtAxis(Direction.Axis axis) {
+		return switch (axis) {
+			case X -> offset().x();
+			case Y -> offset().y();
+			case Z -> offset().z();
+		};
 	}
 
-	public PartPoseInfo updateRotationAtAxis(int axis, float newRotation) {
-		Vector3f newRotationVec;
-		if(axis == 0) {
-			newRotationVec = new Vector3f(newRotation, rotation.y(), rotation.z());
-			return new PartPoseInfo(name(), offset(), newRotationVec);
-		}
-		else if (axis == 1) {
-			newRotationVec = new Vector3f(rotation.x(), newRotation, rotation.z());
-			return new PartPoseInfo(name(), offset(), newRotationVec);
-		}
-		else {
-			newRotationVec = new Vector3f(rotation.x(), rotation().y(), newRotation);
-			return new PartPoseInfo(name(), offset(), newRotationVec);
-		}
+	public PartPoseInfo updateRotationAtAxis(Direction.Axis axis, float newRotation) {
+		final Vector3f newRotationVec = switch (axis) {
+			case X -> new Vector3f(newRotation, rotation.y(), rotation.z());
+			case Y -> new Vector3f(rotation.x(), newRotation, rotation.z());
+			case Z -> new Vector3f(rotation.x(), rotation().y(), newRotation);
+		};
+		return new PartPoseInfo(name(), offset(), newRotationVec);
 	}
 
-	public PartPoseInfo updateOffsetAtAxis(int axis, float newOffset) {
-		Vector3f newOffsetVec;
-		if(axis == 0) {
-			newOffsetVec = new Vector3f(newOffset, offset().y(), offset().z());
-			return new PartPoseInfo(name(), newOffsetVec, rotation());
-		}
-		else if (axis == 1) {
-			newOffsetVec = new Vector3f(offset().x(), newOffset, offset().z());
-			return new PartPoseInfo(name(), newOffsetVec, rotation());
-		}
-		else {
-			newOffsetVec = new Vector3f(offset().x(), offset().y(), newOffset);
-			return new PartPoseInfo(name(), newOffsetVec, rotation());
-		}
+	public PartPoseInfo updateOffsetAtAxis(Direction.Axis axis, float newOffset) {
+		Vector3f newOffsetVec = switch (axis) {
+			case X -> new Vector3f(newOffset, offset().y(), offset().z());
+			case Y -> new Vector3f(offset().x(), newOffset, offset().z());
+			case Z -> new Vector3f(offset().x(), offset().y(), newOffset);
+		};
+		return new PartPoseInfo(name(), newOffsetVec, rotation());
 	}
 
 	public PartPoseInfo updateRotation(Vector3f newRotation) {
