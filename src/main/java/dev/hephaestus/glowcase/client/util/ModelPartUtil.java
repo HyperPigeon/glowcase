@@ -10,8 +10,6 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityType;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3fc;
 
@@ -71,11 +69,4 @@ public class ModelPartUtil {
 		}
 	}
 
-	private static String getPartName(String partPath){
-		String[] parts = partPath.split("\\.");
-		if (parts.length > 0){
-			return parts[parts.length-1];
-		}
-		return "";
-	}
 }
