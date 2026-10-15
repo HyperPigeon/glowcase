@@ -19,8 +19,7 @@ public class RRVClientUtils {
 			return;
 		}
 
-		// FIXME: instantly crashes the game
-		// ItemViewOverlay.INSTANCE.openRecipeView(recipeId, false);
+		ItemViewOverlay.INSTANCE.openRecipeView(recipeId, false);
 	}
 
 	public static void updateWidgetHolder(String recipeId, AtomicReference<RequiresRRVLoaded> widgetHolder) {
